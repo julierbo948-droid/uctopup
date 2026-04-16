@@ -59,7 +59,6 @@ async def buy_handler(message: types.Message):
         await loading.edit_text(f"❌ Error: {result}")
 
 
-@dp.message(F.text.regexp(r"(?i)^\.topup\s+([a-zA-Z0-9]+)"))
 async def handle_topup(message: types.Message):
     if not await is_authorized(message.from_user.id): return await message.reply("ɴᴏᴛ ᴀᴜᴛʜᴏʀɪᴢᴇᴅ ᴜsᴇʀ.")
     match = re.search(r"(?i)^\.topup\s+([a-zA-Z0-9]+)", message.text.strip())
