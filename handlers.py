@@ -69,14 +69,30 @@ async def help_handler(message: types.Message):
 
 # --- ၅။ Cookie Set Handler ---
 async def set_cookie_handler(message: types.Message):
-    if message.from_user.id != OWNER_ID:
-        return await message.reply("❌ Owner Only.")
-    try:
-        new_cookie = message.text.split(maxsplit=1)[1]
-        await set_smile_cookie(new_cookie)
-        await message.reply("✅ Cookie Updated!")
-    except:
-        await message.reply("💡 Usage: <code>.setcookie [val]</code>")
+    # ၁။ Owner စစ်ဆေးခြင်း
+    if message.from_user.id != OWNER_ID: 
+        return await message.reply("❌ Only the Owner can set the Cookie.")
+
+    # ၂။ Format စစ်ဆေးခြင်း
+    parts = message.text.split(maxsplit=1)
+    if len(parts) < 2: 
+        return await message.reply("⚠️ **Usage format:**\n`.setcookie <Long_Main_Cookie>`")
+
+    new_cookie = parts[1].strip()
+
+    # ၃။ Database ထဲမှာ Cookie ကို သိမ်းခြင်း
+    await set_smile_cookie(new_cookie)
+
+    # ၄။ easy_bby ထဲက Cache များကို Reset လုပ်ခြင်း (အရေးကြီးသည်)
+    import easy_bby
+    easy_bby.GLOBAL_SCRAPER = None
+    easy_bby.GLOBAL_CSRF = {
+        'mlbb_br': None, 'mlbb_ph': None, 
+        'mcc_br': None, 'mcc_ph': None,
+        'pubgm_br': None, 'pubgm_ph': None # PUBG အတွက်ပါ ထည့်ထားလိုက်ပါ
+    }
+
+    await message.reply("✅ **Main Cookie has been successfully updated securely.**")
 
 # --- ၆။ Add Admin Handler ---
 async def add_admin_handler(message: types.Message):
