@@ -2,7 +2,7 @@ import asyncio
 import logging
 from aiogram import Bot, Dispatcher, F
 from config import BOT_TOKEN
-from handlers import start_handler, buy_handler, set_cookie_handler,  handle_topup
+from handlers import start_handler, buy_handler, set_cookie_handler, handle_topup
 # Logging ကို သတ်မှတ်ခြင်း
 logging.basicConfig(level=logging.INFO)
 
@@ -23,7 +23,7 @@ async def main():
     # ၃။ UC ဝယ်ယူသည့် Command (.buy သို့မဟုတ် /buy)
     dp.message.register(buy_handler, lambda m: m.text and m.text.lower().startswith((".", "/")) and "buy" in m.text.lower())
 
-    dp.message.register(topup_handler, F.text.regexp(r"(?i)^\.topup\s+([a-zA-Z0-9]+)"))
+    dp.message.register(handle_topup, F.text.regexp(r"(?i)^\.topup\s+([a-zA-Z0-9]+)"))
 
     # Bot စတင်လည်ပတ်ကြောင်း အကြောင်းကြားစာ
     print("🚀 PUBG Voucher Bot is running...")
