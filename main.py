@@ -3,6 +3,7 @@ import logging
 from aiogram import Bot, Dispatcher, F
 from config import BOT_TOKEN
 from handlers import smart_cookie_handler
+from handlers import check_cookie_status
 from handlers import (
     start_handler, 
     buy_handler, 
@@ -32,8 +33,12 @@ async def main():
     # ၃။ Cookie သတ်မှတ်သည့် Command (.setcookie)
     dp.message.register(set_cookie_handler, lambda m: m.text and m.text.lower().startswith(".setcookie"))
 
+    dp.message.register(
+        check_cookie_status, 
+        lambda m: m.text and m.text.lower() in [".ck", ".cookies"]
+    )
+
     # ၄။ Voucher Code ဖြင့် ငွေဖြည့်သည့် Command (.topup)
-    # Regex ကို သုံးပြီး register လုပ်တာ ပိုသေချာပါတယ်
     dp.message.register(topup_handler, F.text.regexp(r"(?i)^\.topup\s+[\w-]+"))
 
     dp.message.register(cookie_status_handler, lambda m: m.text and m.text.lower() == ".ck")
