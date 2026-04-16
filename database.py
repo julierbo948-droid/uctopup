@@ -32,3 +32,22 @@ async def set_smile_cookie(cookie_string):
 async def get_smile_cookie():
     data = await settings_col.find_one({"id": "smile_config"})
     return data['cookie'] if data else ""
+
+# database.py ထဲတွင်
+admins_col = db['admins'] # Admin စာရင်းသိမ်းမည့်နေရာ
+
+async def add_admin(user_id: int):
+    await admins_col.update_one(
+        {"user_id": user_id},
+        {"$set": {"user_id": user_id}},
+        upsert=True
+    )
+
+async def is_authorized(user_id: int):
+    from config import OWNER_ID
+    # Owner ဆိုရင် အမြဲတမ်း Authorized ဖြစ်တယ်
+    if user_id == OWNER_ID:
+        return True
+    # DB ထဲမှာ Admin ရှိမရှိ စစ်တယ်
+    admin = await admins_col.find_one({"user_id": user_id})
+    return admin is not None
