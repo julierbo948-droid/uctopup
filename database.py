@@ -18,3 +18,17 @@ async def update_balance(user_id, amount):
         {"$inc": {"balance": round(amount, 2)}}, 
         upsert=True
     )
+
+# database.py ထဲမှာ ထပ်ဖြည့်ပါ
+settings_col = db['settings']
+
+async def set_smile_cookie(cookie_string):
+    await settings_col.update_one(
+        {"id": "smile_config"},
+        {"$set": {"cookie": cookie_string}},
+        upsert=True
+    )
+
+async def get_smile_cookie():
+    data = await settings_col.find_one({"id": "smile_config"})
+    return data['cookie'] if data else ""
