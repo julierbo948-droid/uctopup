@@ -36,6 +36,8 @@ async def main():
 
     dp.message.register(cookie_status_handler, lambda m: m.text and m.text.lower() == ".ck")
 
+    dp.message.register(help_handler, lambda m: m.text and m.text.lower() == ".help")
+
     # ၅။ Admin အတွက် Voucher ထုတ်ပေးသည့် Command (.gen)
    # dp.message.register(gen_voucher_handler, lambda m: m.text and m.text.lower().startswith(".gen"))
 
