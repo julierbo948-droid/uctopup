@@ -14,6 +14,22 @@ async def start_handler(message: types.Message):
             f"• <code>.topup [code]</code> - ငွေဖြည့်ရန်")
     await message.reply(text, parse_mode="HTML")
 
+from database import set_smile_cookie
+from config import OWNER_ID
+
+async def set_cookie_handler(message: types.Message):
+    # Owner စစ်ဆေးခြင်း
+    if message.from_user.id != OWNER_ID:
+        return await message.reply("❌ သင်သည် Admin မဟုတ်ပါ။")
+
+    # Command Format: .setcookie session_id=xxx;...
+    try:
+        new_cookie = message.text.split(maxsplit=1)[1]
+        await set_smile_cookie(new_cookie)
+        await message.reply("✅ Smile One Cookie ကို အောင်မြင်စွာ Update လုပ်ပြီးပါပြီ။")
+    except IndexError:
+        await message.reply("💡 Usage: <code>.setcookie [cookie_string]</code>", parse_mode="HTML")
+
 async def buy_handler(message: types.Message):
     match = re.search(r"^[./]buy\s+(\d+)", message.text)
     if not match: return
