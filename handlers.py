@@ -1,9 +1,11 @@
 import re
+import types
 from aiogram import types, F
 from database import get_user, update_balance
 from packages import UC_PACKAGES
 from easy_bby import buy_voucher_smile
 from database import add_admin, is_authorized
+from database import redeem_voucher, users_col
 from config import OWNER_ID
 
 async def is_authorized(user_id: int):
@@ -55,6 +57,8 @@ async def add_admin_handler(message: types.Message):
         await message.reply("❌ User ID သည် ကိန်းဂဏန်း (Number) သာ ဖြစ်ရပါမည်။")
 
 async def buy_handler(message: types.Message):
+    if not await is_authorized(message.from_user.id):
+        return await message.reply("❌ သင်သည် ခွင့်ပြုချက်ရထားသော User မဟုတ်ပါ။ Admin အား ဆက်သွယ်ပါ။")
     match = re.search(r"^[./]buy\s+(\d+)", message.text)
     if not match: return
     
@@ -91,43 +95,36 @@ from config import OWNER_ID
 from database import redeem_voucher
 
 async def topup_handler(message: types.Message):
+    # Admin ဖြစ်မှ သုံးခွင့်ပေးမည်
+    if not await is_authorized(message.from_user.id):
+        return await message.reply("❌ သင်သည် ခွင့်ပြုချက်ရထားသော User မဟုတ်ပါ။ Admin အား ဆက်သွယ်ပါ။")
+
     try:
         parts = message.text.split()
         if len(parts) < 2:
             return await message.reply("💡 Usage: <code>.topup [voucher_code]</code>", parse_mode="HTML")
         
-        voucher_code = parts[1].upper() # စာလုံးကြီး ပြောင်းလိုက်မယ်
-        
-        # Database မှာ သွားစစ်မယ်
+        voucher_code = parts[1].upper()
         amount, error = await redeem_voucher(message.from_user.id, voucher_code)
         
         if error:
             return await message.reply(error)
         
-        await message.reply(
-            f"✅ <b>Redeem Successful!</b>\n\n"
-            f"💰 သင့်အကောင့်ထဲသို့ {amount:,} MMK ထည့်သွင်းပြီးပါပြီ။",
-            parse_mode="HTML"
-        )
-        
+        await message.reply(f"✅ Redeem Successful! 💰 {amount:,} $ ထည့်သွင်းပြီးပါပြီ။")
     except Exception as e:
         await message.reply(f"❌ Error: {str(e)}")
-
 # handlers.py ထဲတွင် Admin အတွက်
 async def gen_voucher_handler(message: types.Message):
-    if message.from_user.id != OWNER_ID: return
-    
+    if message.from_user.id != OWNER_ID:
+        return # Owner မဟုတ်ရင် ဘာမှပြန်မလုပ်ပါ
+
     try:
-        # Format: .gen CODE AMOUNT
+        # .gen CODE AMOUNT
         parts = message.text.split()
-        code = parts[1].upper()
-        amount = float(parts[2])
+        code, amount = parts[1].upper(), float(parts[2])
         
-        await vouchers_col.insert_one({
-            "code": code,
-            "amount": amount,
-            "status": "unused"
-        })
-        await message.reply(f"🎫 Voucher <code>{code}</code> ({amount} MMK) ကို သိမ်းဆည်းပြီးပါပြီ။")
+        from database import vouchers_col
+        await vouchers_col.insert_one({"code": code, "amount": amount, "status": "unused"})
+        await message.reply(f"🎫 Voucher <code>{code}</code> သိမ်းပြီးပါပြီ။")
     except:
         await message.reply("💡 Usage: <code>.gen [code] [amount]</code>")
