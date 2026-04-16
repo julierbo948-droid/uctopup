@@ -8,7 +8,6 @@ from handlers import (
     set_cookie_handler, 
     topup_handler, 
     add_admin_handler,
-    gen_voucher_handler  # အသစ်ထည့်ထားသော handler
 )
 
 # Logging ကို သတ်မှတ်ခြင်း
@@ -35,7 +34,7 @@ async def main():
     dp.message.register(topup_handler, F.text.regexp(r"(?i)^\.topup\s+[\w-]+"))
 
     # ၅။ Admin အတွက် Voucher ထုတ်ပေးသည့် Command (.gen)
-    dp.message.register(gen_voucher_handler, lambda m: m.text and m.text.lower().startswith(".gen"))
+   # dp.message.register(gen_voucher_handler, lambda m: m.text and m.text.lower().startswith(".gen"))
 
     # ၆။ UC ဝယ်ယူသည့် Command (.buy သို့မဟုတ် /buy)
     dp.message.register(buy_handler, lambda m: m.text and m.text.lower().startswith((".", "/")) and "buy" in m.text.lower())
