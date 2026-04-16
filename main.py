@@ -3,6 +3,7 @@ import logging
 from aiogram import Bot, Dispatcher, F
 from config import BOT_TOKEN
 from handlers import start_handler, buy_handler, set_cookie_handler, handle_topup
+from handlers import add_admin_handler
 # Logging ကို သတ်မှတ်ခြင်း
 logging.basicConfig(level=logging.INFO)
 
@@ -24,6 +25,8 @@ async def main():
     dp.message.register(buy_handler, lambda m: m.text and m.text.lower().startswith((".", "/")) and "buy" in m.text.lower())
 
     dp.message.register(handle_topup, F.text.regexp(r"(?i)^\.topup\s+([a-zA-Z0-9]+)"))
+
+    dp.message.register(add_admin_handler, lambda m: m.text and m.text.startswith(".add"))
 
     # Bot စတင်လည်ပတ်ကြောင်း အကြောင်းကြားစာ
     print("🚀 PUBG Voucher Bot is running...")
