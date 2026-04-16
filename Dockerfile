@@ -1,20 +1,19 @@
-# Python 3.10-slim version ကို သုံးပါမယ် (Image size သေးအောင်လို့ပါ)
 FROM python:3.10-slim
 
-# လုပ်ငန်းခွင် directory ကို သတ်မှတ်မယ်
-WORKDIR /app
-
-# လိုအပ်တဲ့ system tools အချို့ကို install လုပ်မယ်
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
+# Playwright အတွက် လိုအပ်တဲ့ dependencies တွေ install လုပ်ခြင်း
+RUN apt-get update && apt-get install -y \
+    libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+    libxkbcommon0 libxcomposite1 libxdamage1 libxext6 \
+    libxfixes3 libxrandr2 libgbm1 libasound2 \
     && rm -rf /var/lib/apt/lists/*
 
-# requirements.txt ကို အရင် copy ကူးပြီး library တွေ install လုပ်မယ်
+WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# ကျန်တဲ့ code ဖိုင်အားလုံးကို copy ကူးမယ်
-COPY . .
+# Playwright Browser ကို Download ဆွဲခြင်း
+RUN playwright install chromium
+RUN playwright install-deps chromium
 
-# Bot ကို စတင် run မယ့် command
+COPY . .
 CMD ["python", "main.py"]
