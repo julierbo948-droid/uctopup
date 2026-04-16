@@ -10,4 +10,4 @@ GOOGLE_EMAIL = os.getenv("GOOGLE_EMAIL")
 GOOGLE_PASS = os.getenv("GOOGLE_PASS")
 
 # Smile One PUBG Product ID
-PUBG_PRODUCT_ID = "650"
+PUBG_PRODUCT_ID = "617"
