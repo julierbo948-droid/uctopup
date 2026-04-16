@@ -147,34 +147,36 @@ async def smart_cookie_handler(message: types.Message):
         await message.reply(f"❌ <b>Parsing Error:</b> {str(e)}", parse_mode=ParseMode.HTML)
 
 async def check_cookie_status(message: types.Message):
-    # ၁။ Owner စစ်ဆေးခြင်း
     if message.from_user.id != OWNER_ID: 
         return await message.reply("❌ You are not authorized.")
 
     loading_msg = await message.reply("⌛ Checking Cookie status...")
 
     try:
-        import easy_bby
-        # Scraper instance ကို ယူမယ်
-        scraper = await easy_bby.get_main_scraper()
+        from database import get_smile_cookie
+        import httpx
         
+        cookie = await get_smile_cookie()
+        if not cookie:
+            return await loading_msg.edit_text("❌ Database ထဲမှာ Cookie မရှိပါ။")
+
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'X-Requested-With': 'XMLHttpRequest',
-            'Origin': 'https://www.smile.one'
+            'Cookie': cookie
         }
 
-        # Smile One ရဲ့ Order Page ကို လှမ်းစစ်ခြင်း (Login မဝင်ထားရင် Login page ကို redirect လုပ်ပါလိမ့်မယ်)
-        response = await scraper.get('https://www.smile.one/customer/order', headers=headers, timeout=15)
-        
-        # URL မှာ login ဆိုတဲ့စာသားမပါဘဲ status 200 ပြန်လာရင် Cookie အရှင်လို့ သတ်မှတ်မယ်
-        if "login" not in str(response.url).lower() and response.status_code == 200:
-            await loading_msg.edit_text("🟢 <b>Aᴄᴛɪᴠᴇ</b>\n\nSmile One Session ပုံမှန် အလုပ်လုပ်နေပါသည်။", parse_mode=ParseMode.HTML)
-        else:
-            await loading_msg.edit_text("🔴 <b>Eхᴘɪʀᴇᴅ</b>\n\nCookie သက်တမ်းကုန်သွားပါပြီ။ ကျေးဇူးပြု၍ Update လုပ်ပေးပါ။", parse_mode=ParseMode.HTML)
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            # Smile One ရဲ့ order page ကို တိုက်ရိုက် စစ်ဆေးခြင်း
+            response = await client.get('https://www.smile.one/customer/order', headers=headers, follow_redirects=True)
+            
+            # Login page ကို ပြန်ရောက်သွားရင် Cookie သေနေတာပါ
+            if "login" not in str(response.url).lower() and response.status_code == 200:
+                await loading_msg.edit_text("🟢 <b>Aᴄᴛɪᴠᴇ</b>\n\nSmile One Session ပုံမှန် အလုပ်လုပ်နေပါသည်။", parse_mode="HTML")
+            else:
+                await loading_msg.edit_text("🔴 <b>Eхᴘɪʀᴇᴅ</b>\n\nCookie သက်တမ်းကုန်သွားပါပြီ။ ကျေးဇူးပြု၍ Update လုပ်ပေးပါ။", parse_mode="HTML")
 
     except Exception as e:
-        await loading_msg.edit_text(f"❌ <b>Error checking cookie:</b>\n<code>{str(e)}</code>", parse_mode=ParseMode.HTML)
+        await loading_msg.edit_text(f"❌ <b>Error checking cookie:</b>\n<code>{str(e)}</code>", parse_mode="HTML")
 
 # --- ၆။ Add Admin Handler ---
 async def add_admin_handler(message: types.Message):
