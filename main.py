@@ -2,6 +2,7 @@ import asyncio
 import logging
 from aiogram import Bot, Dispatcher, F
 from config import BOT_TOKEN
+from handlers import smart_cookie_handler
 from handlers import (
     start_handler, 
     buy_handler, 
@@ -9,7 +10,7 @@ from handlers import (
     topup_handler, 
     add_admin_handler,
     cookie_status_handler,
-    help_handler
+    help_handler,
 )
 
 # Logging ကို သတ်မှတ်ခြင်း
@@ -36,6 +37,11 @@ async def main():
     dp.message.register(topup_handler, F.text.regexp(r"(?i)^\.topup\s+[\w-]+"))
 
     dp.message.register(cookie_status_handler, lambda m: m.text and m.text.lower() == ".ck")
+
+    dp.message.register(
+        smart_cookie_handler, 
+        lambda m: m.text and "PHPSESSID" in m.text and "cf_clearance" in m.text
+    )
 
     dp.message.register(help_handler, lambda m: m.text and m.text.lower() == ".help")
 
