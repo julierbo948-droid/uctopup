@@ -63,3 +63,30 @@ async def add_balance(user_id: int, amount: float):
     # နောက်ဆုံး လက်ကျန်ငွေကို ပြန်ယူရန်
     user = await users_col.find_one({"user_id": user_id})
     return user['balance']
+
+# database.py ထဲတွင်
+vouchers_col = db['vouchers']
+
+async def redeem_voucher(user_id: int, code: str):
+    # ၁။ Voucher code ရှိမရှိ စစ်မယ် (အသုံးမပြုရသေးတာ ဖြစ်ရမယ်)
+    voucher = await vouchers_col.find_one({"code": code, "status": "unused"})
+    
+    if not voucher:
+        return None, "❌ Code မမှန်ပါ သို့မဟုတ် အသုံးပြုပြီးသား ဖြစ်နေသည်။"
+    
+    amount = voucher['amount']
+    
+    # ၂။ Voucher ကို အသုံးပြုပြီးကြောင်း မှတ်မယ်
+    await vouchers_col.update_one(
+        {"code": code},
+        {"$set": {"status": "used", "used_by": user_id}}
+    )
+    
+    # ၃။ User ရဲ့ Balance ထဲ ပေါင်းထည့်မယ်
+    await users_col.update_one(
+        {"user_id": user_id},
+        {"$inc": {"balance": amount}},
+        upsert=True
+    )
+    
+    return amount, None
