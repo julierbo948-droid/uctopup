@@ -1,59 +1,54 @@
+import httpx
 import asyncio
-from playwright.async_api import async_playwright
-from config import GOOGLE_EMAIL, GOOGLE_PASS
 from database import get_smile_cookie
 
-SMILE_COOKIE = ""
-
-async def buy_voucher_smile(item_id):
-    # Database ထဲက လက်ရှိ Cookie ကို ယူမယ်
+# --- ၁။ Smile One ထဲသို့ Gift Card လှမ်းဖြည့်ပေးမည့် Function ---
+async def redeem_smile_giftcard(card_code, region="br"):
+    """
+    Smile One Account ထဲသို့ Gift Card လှမ်းဖြည့်ပေးမည့် Logic
+    """
     current_cookie = await get_smile_cookie()
     
     if not current_cookie:
-        return "error", "Cookie မရှိသေးပါ။ Admin အား သတ်မှတ်ပေးရန် ပြောပါ။"
+        return False, "Cookie မရှိသေးပါ။ Admin အား သတ်မှတ်ပေးရန် ပြောပါ။"
 
-    url = "https://www.smile.one/br/pay/get_product"
+    # Region အလိုက် URL ပြောင်းလဲနိုင်သည်
+    url = f"https://www.smile.one/{region}/pay/giftcard_redeem"
+    
     headers = {
         "Cookie": current_cookie,
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        "Content-Type": "application/x-www-form-urlencoded",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Referer": f"https://www.smile.one/{region}/pay/giftcard",
+        "Origin": "https://www.smile.one"
     }
     
+    data = {
+        "card_number": card_code
+    }
 
-async def auto_login_smile():
-    global SMILE_COOKIE
-    async with async_playwright() as p:
-        # Browser ကို headless (မမြင်ရအောင်) ဖွင့်မယ်
-        browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context()
-        page = await context.new_page()
-
+    async with httpx.AsyncClient(timeout=30.0) as client:
         try:
-            # Smile One Login Page သို့သွားမယ်
-            await page.goto("https://www.smile.one/ph/login")
+            response = await client.post(url, headers=headers, data=data)
+            res_json = response.json()
             
-            # Google Login Button ကိုနှိပ်မယ်
-            await page.click("text=Google") 
-            
-            # Email ရိုက်မယ်
-            await page.fill('input[type="email"]', GOOGLE_EMAIL)
-            await page.click("#identifierNext")
-            await asyncio.sleep(2)
-            
-            # Password ရိုက်မယ်
-            await page.fill('input[type="password"]', GOOGLE_PASS)
-            await page.click("#passwordNext")
-            
-            # Login အောင်မြင်သည်အထိ ခဏစောင့်မယ်
-            await page.wait_for_url("https://www.smile.one/ph/", timeout=60000)
-            
-            # Cookie များကို ဆွဲထုတ်မယ်
-            cookies = await context.cookies()
-            SMILE_COOKIE = "; ".join([f"{c['name']}={c['value']}" for c in cookies])
-            
-            print("✅ Successfully retrieved Smile One Cookie!")
-            return True
+            # Smile One တုံ့ပြန်ချက်ကို စစ်ဆေးခြင်း
+            if res_json.get("status") == 200:
+                # အောင်မြင်လျှင် ရရှိလာသည့် ပမာဏ (သို့မဟုတ်) အောင်မြင်ကြောင်းစာ ပြန်ပေးမည်
+                amount = res_json.get("amount", "Success")
+                return True, amount
+            else:
+                return False, res_json.get("msg", "Redeem Failed")
         except Exception as e:
-            print(f"❌ Login Error: {e}")
-            return False
-        finally:
-            await browser.close()
+            return False, f"Network Error: {str(e)}"
+
+# --- ၂။ UC ဝယ်ယူသည့် Function ---
+async def buy_voucher_smile(item_id):
+    current_cookie = await get_smile_cookie()
+    if not current_cookie:
+        return "error", "Cookie မရှိသေးပါ။"
+
+    url = "https://www.smile.one/br/pay/get_product" # နမူနာ URL
+    # ဒီနေရာမှာ Smile One ရဲ့ ဝယ်ယူမှု API logic များကို ဆက်လက်ထည့်သွင်းရန်
+    # ... (ဝယ်ယူမှု code များ) ...
+    return "success", "ABC-123-VOUCHER" # နမူနာ ပြန်ပေးချက်
