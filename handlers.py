@@ -121,3 +121,22 @@ async def buy_handler(message: types.Message):
         )
     else:
         await loading.edit_text(f"❌ Smile One Error: {result}")
+
+# handlers.py ထဲတွင်
+async def cookie_status_handler(message: types.Message):
+    if message.from_user.id != OWNER_ID: 
+        return
+
+    from database import get_smile_cookie
+    from easy_bby import check_cookie_validity
+    
+    cookie = await get_smile_cookie()
+    if not cookie:
+        return await message.reply("❌ Database ထဲမှာ Cookie လုံးဝ မရှိသေးပါ။")
+    
+    # check_cookie_validity က easy_bby ထဲမှာ ရှိရပါမယ်
+    success, msg = await check_cookie_validity(cookie)
+    if success:
+        await message.reply(f"✅ <b>Cookie Status:</b> Active\n🌐 <b>Region:</b> Brazil (Default)", parse_mode="HTML")
+    else:
+        await message.reply(f"❌ <b>Cookie Status:</b> Expired/Invalid\n📝 <b>Error:</b> {msg}", parse_mode="HTML")
