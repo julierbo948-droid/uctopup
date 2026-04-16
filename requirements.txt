@@ -2,3 +2,4 @@ aiogram
 motor
 httpx
 python-dotenv
+playwright
