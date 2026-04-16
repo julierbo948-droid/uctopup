@@ -94,6 +94,58 @@ async def set_cookie_handler(message: types.Message):
 
     await message.reply("✅ **Main Cookie has been successfully updated securely.**")
 
+import re
+from aiogram.enums import ParseMode
+
+async def smart_cookie_handler(message: types.Message):
+    # ၁။ Owner စစ်ဆေးခြင်း
+    if message.from_user.id != OWNER_ID: 
+        return await message.reply("❌ You are not authorized.")
+
+    text = message.text
+    # Smile One အတွက် လိုအပ်သော Cookie Keys များ
+    target_keys = ["PHPSESSID", "cf_clearance", "__cf_bm", "_did", "_csrf"]
+    extracted_cookies = {}
+
+    try:
+        # Regex သုံးပြီး Cookie key နဲ့ value များကို ရှာဖွေခြင်း
+        for key in target_keys:
+            pattern = rf"['\"]?{key}['\"]?\s*[:=]\s*['\"]?([^'\",;\s}}]+)['\"]?"
+            match = re.search(pattern, text)
+            if match:
+                extracted_cookies[key] = match.group(1)
+
+        # အဓိက လိုအပ်သော key များ ပါ/မပါ စစ်ဆေးခြင်း
+        if "PHPSESSID" not in extracted_cookies or "cf_clearance" not in extracted_cookies:
+            return await message.reply(
+                "❌ <b>Error:</b> <code>PHPSESSID</code> နှင့် <code>cf_clearance</code> ကို ရှာမတွေ့ပါ။\n"
+                "Format မှန်ကန်ကြောင်း စစ်ဆေးပါ။", 
+                parse_mode=ParseMode.HTML
+            )
+
+        # Cookie String အဖြစ် ပြန်လည် တည်ဆောက်ခြင်း
+        formatted_cookie_str = "; ".join([f"{k}={v}" for k, v in extracted_cookies.items()])
+        
+        # Database တွင် သိမ်းဆည်းခြင်း
+        await set_smile_cookie(formatted_cookie_str)
+        
+        # easy_bby ထဲမှ Cache များကို Clear လုပ်ခြင်း
+        import easy_bby
+        easy_bby.GLOBAL_SCRAPER = None
+        easy_bby.GLOBAL_CSRF = {'mlbb_br': None, 'mlbb_ph': None, 'mcc_br': None, 'mcc_ph': None}
+        
+        # အောင်မြင်ကြောင်း ပြန်ကြားစာ
+        success_msg = "✅ <b>Cookies Successfully Extracted & Saved!</b>\n\n📦 <b>Extracted Data:</b>\n"
+        for k, v in extracted_cookies.items():
+            display_v = f"{v[:15]}...{v[-15:]}" if len(v) > 35 else v
+            success_msg += f"🔸 <code>{k}</code> : {display_v}\n"
+        
+        success_msg += f"\n🍪 <b>Final String:</b>\n<code>{formatted_cookie_str}</code>"
+        await message.reply(success_msg, parse_mode=ParseMode.HTML)
+
+    except Exception as e:
+        await message.reply(f"❌ <b>Parsing Error:</b> {str(e)}", parse_mode=ParseMode.HTML)
+
 # --- ၆။ Add Admin Handler ---
 async def add_admin_handler(message: types.Message):
     if message.from_user.id != OWNER_ID:
