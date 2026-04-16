@@ -3,6 +3,13 @@ from aiogram import types, F
 from database import get_user, update_balance
 from packages import UC_PACKAGES
 from easy_bby import buy_voucher_smile
+from database import add_admin, is_authorized
+from config import OWNER_ID
+
+async def is_authorized(user_id: int):
+    from config import OWNER_ID
+    # Owner ID ဖြစ်နေရင် True ပေးမယ်
+    return user_id == OWNER_ID
 
 async def start_handler(message: types.Message):
     user = await get_user(message.from_user.id)
@@ -29,6 +36,23 @@ async def set_cookie_handler(message: types.Message):
         await message.reply("✅ Smile One Cookie ကို အောင်မြင်စွာ Update လုပ်ပြီးပါပြီ။")
     except IndexError:
         await message.reply("💡 Usage: <code>.setcookie [cookie_string]</code>", parse_mode="HTML")
+
+async def add_admin_handler(message: types.Message):
+    # Owner တစ်ယောက်တည်းသာ Admin အသစ် ထည့်ခွင့်ရှိမည်
+    if message.from_user.id != OWNER_ID:
+        return await message.reply("❌ Owner သာလျှင် Admin အသစ် ထည့်သွင်းနိုင်ပါသည်။")
+
+    try:
+        # Command ပုံစံ: .add 12345678
+        parts = message.text.split()
+        if len(parts) < 2:
+            return await message.reply("💡 Usage: <code>.add [user_id]</code>", parse_mode="HTML")
+        
+        new_admin_id = int(parts[1])
+        await add_admin(new_admin_id)
+        await message.reply(f"✅ User ID: <code>{new_admin_id}</code> ကို Admin အဖြစ် ထည့်သွင်းပြီးပါပြီ။", parse_mode="HTML")
+    except ValueError:
+        await message.reply("❌ User ID သည် ကိန်းဂဏန်း (Number) သာ ဖြစ်ရပါမည်။")
 
 async def buy_handler(message: types.Message):
     match = re.search(r"^[./]buy\s+(\d+)", message.text)
@@ -58,9 +82,9 @@ async def buy_handler(message: types.Message):
     else:
         await loading.edit_text(f"❌ Error: {result}")
 
-
 async def handle_topup(message: types.Message):
-    if not await is_authorized(message.from_user.id): return await message.reply("ɴᴏᴛ ᴀᴜᴛʜᴏʀɪᴢᴇᴅ ᴜsᴇʀ.")
+    if message.from_user.id != OWNER_ID:
+        return await message.reply("ɴᴏᴛ ᴀᴜᴛʜᴏʀɪᴢᴇᴅ ᴜsᴇʀ.")
     match = re.search(r"(?i)^\.topup\s+([a-zA-Z0-9]+)", message.text.strip())
     if not match: return await message.reply("Usage format - `.topup <Code>`")
     activation_code = match.group(1).strip()
