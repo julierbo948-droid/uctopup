@@ -2,20 +2,39 @@ import asyncio
 import logging
 from aiogram import Bot, Dispatcher, F
 from config import BOT_TOKEN
-from handlers import start_handler, buy_handler
+from handlers import start_handler, buy_handler, set_cookie_handler
 
+# Logging ကို သတ်မှတ်ခြင်း
 logging.basicConfig(level=logging.INFO)
 
 async def main():
+    # Bot နှင့် Dispatcher ကို Initialise လုပ်ခြင်း
     bot = Bot(token=BOT_TOKEN)
     dp = Dispatcher()
 
-    # Register Handlers
-    dp.message.register(start_handler, F.text.in_({"/start", ".start"}))
-    dp.message.register(buy_handler, lambda m: m.text and m.text.startswith((".", "/")) and "buy" in m.text.lower())
+    # --- Handlers Register လုပ်ခြင်း ---
 
+    # ၁။ Start Command (.start သို့မဟုတ် /start)
+    dp.message.register(start_handler, F.text.in_({"/start", ".start"}))
+
+    # ၂။ Cookie သတ်မှတ်သည့် Command (.setcookie)
+    # ဒါကို buy_handler ရဲ့ အပေါ်မှာ ထားပေးပါ (ပိုသေချာအောင်လို့ပါ)
+    dp.message.register(set_cookie_handler, lambda m: m.text and m.text.lower().startswith(".setcookie"))
+
+    # ၃။ UC ဝယ်ယူသည့် Command (.buy သို့မဟုတ် /buy)
+    dp.message.register(buy_handler, lambda m: m.text and m.text.lower().startswith((".", "/")) and "buy" in m.text.lower())
+
+    # Bot စတင်လည်ပတ်ကြောင်း အကြောင်းကြားစာ
     print("🚀 PUBG Voucher Bot is running...")
-    await dp.start_polling(bot)
+    
+    # Polling စတင်ခြင်း
+    try:
+        await dp.start_polling(bot)
+    finally:
+        await bot.session.close()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except (KeyboardInterrupt, SystemExit):
+        logging.info("Bot stopped!")
