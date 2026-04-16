@@ -82,7 +82,10 @@ async def topup_handler(message: types.Message):
             
             await loading.edit_text(f"✅ <b>Smile One Redeem Success!</b>\n💰 Added: {added_amount}$ to your account.", parse_mode="HTML")
         else:
-            await loading.edit_text(f"❌ <b>Smile One Error:</b>\n{result}", parse_mode="HTML")
+            if "used" in result.lower() or "not found" in result.lower() or "invalid" in result.lower():
+                await loading.edit_text("❌ Code မမှန်ပါ သို့မဟုတ် အသုံးပြုပြီးသား ဖြစ်နေသည်။")
+            else:
+                await loading.edit_text(f"❌ {result}")
 
     except Exception as e:
         await message.reply(f"❌ System Error: {str(e)}")
