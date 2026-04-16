@@ -123,7 +123,9 @@ async def buy_handler(message: types.Message):
         await loading.edit_text(f"❌ Smile One Error: {result}")
 
 # handlers.py ထဲတွင်
+# handlers.py ထဲတွင်
 async def cookie_status_handler(message: types.Message):
+    # Owner တစ်ယောက်တည်းသာ စစ်ဆေးခွင့်ရှိမည်
     if message.from_user.id != OWNER_ID: 
         return
 
@@ -134,9 +136,23 @@ async def cookie_status_handler(message: types.Message):
     if not cookie:
         return await message.reply("❌ Database ထဲမှာ Cookie လုံးဝ မရှိသေးပါ။")
     
-    # check_cookie_validity က easy_bby ထဲမှာ ရှိရပါမယ်
+    # easy_bby ထဲက check_cookie_validity ကို သုံးပြီး စစ်ဆေးခြင်း
     success, msg = await check_cookie_validity(cookie)
+    
     if success:
-        await message.reply(f"✅ <b>Cookie Status:</b> Active\n🌐 <b>Region:</b> Brazil (Default)", parse_mode="HTML")
+        # Active ဖြစ်လျှင် ပြမည့်ပုံစံ
+        status_text = "🟢 <b>Aᴄᴛɪᴠᴇ</b>"
+        detail = "Smile One စနစ် ပုံမှန် အလုပ်လုပ်နေပါသည်။"
     else:
-        await message.reply(f"❌ <b>Cookie Status:</b> Expired/Invalid\n📝 <b>Error:</b> {msg}", parse_mode="HTML")
+        # Expired ဖြစ်လျှင် ပြမည့်ပုံစံ
+        status_text = "🔴 <b>Eхᴘɪʀᴇᴅ</b>"
+        detail = f"Cookie သက်တမ်းကုန်သွားပါပြီ။ ({msg})"
+
+    text = (
+        f"📊 <b>Sᴍɪʟᴇ Oɴᴇ Cᴏᴏᴋɪᴇ Sᴛᴀᴛᴜs</b>\n\n"
+        f"Sᴛᴀᴛᴜs: {status_text}\n"
+        f"Iɴғᴏ: <i>{detail}</i>\n\n"
+        f"📅 Cʜᴇᴄᴋᴇᴅ Oɴ: 2026-04-17"
+    )
+    
+    await message.reply(text, parse_mode="HTML")
