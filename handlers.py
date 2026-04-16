@@ -156,3 +156,25 @@ async def cookie_status_handler(message: types.Message):
     )
     
     await message.reply(text, parse_mode="HTML")
+
+async def help_handler(message: types.Message):
+    is_owner = message.from_user.id == OWNER_ID
+    
+    # Common Help for Admins
+    help_text = (
+        "🛡️ <b>Aᴅᴍɪɴ Cᴏᴍᴍᴀɴᴅs</b>\n"
+        "• <code>.topup [code] [reg]</code> - Auto Redeem\n"
+        "• <code>.buy [item_id]</code> - Buy Voucher\n"
+        "• <code>.start</code> - Check Balance\n\n"
+    )
+    
+    # Extra Help if User is Owner
+    if is_owner:
+        help_text += (
+            "👑 <b>Oᴡɴᴇʀ Cᴏᴍᴍᴀɴᴅs</b>\n"
+            "• <code>.add [user_id]</code> - Add Admin\n"
+            "• <code>.setcookie [val]</code> - Set Session\n"
+            "• <code>.ck</code> - Cookie Status Check"
+        )
+    
+    await message.reply(help_text, parse_mode="HTML")
