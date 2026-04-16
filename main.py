@@ -8,7 +8,8 @@ from handlers import (
     set_cookie_handler, 
     topup_handler, 
     add_admin_handler,
-    cookie_status_handler
+    cookie_status_handler,
+    help_handler
 )
 
 # Logging ကို သတ်မှတ်ခြင်း
