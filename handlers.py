@@ -87,40 +87,47 @@ from aiogram import types
 from database import add_balance, is_authorized
 from config import OWNER_ID
 
+# handlers.py ထဲတွင်
+from database import redeem_voucher
+
 async def topup_handler(message: types.Message):
-    # ၁။ Admin/Owner ဟုတ်မဟုတ် အရင်စစ်မယ်
-    if not await is_authorized(message.from_user.id):
-        return await message.reply("❌ သင်သည် ဤ command ကို သုံးရန် ခွင့်ပြုချက်မရှိပါ။")
-
     try:
-        # Command format: .topup <user_id> <amount>
         parts = message.text.split()
+        if len(parts) < 2:
+            return await message.reply("💡 Usage: <code>.topup [voucher_code]</code>", parse_mode="HTML")
         
-        if len(parts) < 3:
-            return await message.reply("💡 Usage: <code>.topup [user_id] [amount]</code>", parse_mode="HTML")
+        voucher_code = parts[1].upper() # စာလုံးကြီး ပြောင်းလိုက်မယ်
         
-        target_user_id = int(parts[1])
-        amount = float(parts[2])
-
-        if amount <= 0:
-            return await message.reply("❌ ငွေပမာဏသည် ၀ ထက် ကြီးရပါမည်။")
-
-        # ၂။ Database ထဲမှာ သွားပေါင်းမယ်
-        new_balance = await add_balance(target_user_id, amount)
-
-        # ၃။ အောင်မြင်ကြောင်း ပြန်ကြားမယ်
-        text = (
-            f"✅ <b>Topup Successful!</b>\n\n"
-            f"👤 User ID: <code>{target_user_id}</code>\n"
-            f"💰 Added: {amount:,} MMK\n"
-            f"💳 Current Balance: {new_balance:,} MMK"
+        # Database မှာ သွားစစ်မယ်
+        amount, error = await redeem_voucher(message.from_user.id, voucher_code)
+        
+        if error:
+            return await message.reply(error)
+        
+        await message.reply(
+            f"✅ <b>Redeem Successful!</b>\n\n"
+            f"💰 သင့်အကောင့်ထဲသို့ {amount:,} MMK ထည့်သွင်းပြီးပါပြီ။",
+            parse_mode="HTML"
         )
-        await message.reply(text, parse_mode="HTML")
-
-        # (Optional) User ဆီကို ငွေဝင်ကြောင်း အော်တိုစာပို့ချင်ရင်
-        # await message.bot.send_message(target_user_id, f"💰 သင့်အကောင့်ထဲသို့ {amount:,} MMK ဖြည့်သွင်းပြီးပါပြီ။")
-
-    except ValueError:
-        await message.reply("❌ User ID နှင့် Amount သည် ကိန်းဂဏန်းများသာ ဖြစ်ရပါမည်။")
+        
     except Exception as e:
         await message.reply(f"❌ Error: {str(e)}")
+
+# handlers.py ထဲတွင် Admin အတွက်
+async def gen_voucher_handler(message: types.Message):
+    if message.from_user.id != OWNER_ID: return
+    
+    try:
+        # Format: .gen CODE AMOUNT
+        parts = message.text.split()
+        code = parts[1].upper()
+        amount = float(parts[2])
+        
+        await vouchers_col.insert_one({
+            "code": code,
+            "amount": amount,
+            "status": "unused"
+        })
+        await message.reply(f"🎫 Voucher <code>{code}</code> ({amount} MMK) ကို သိမ်းဆည်းပြီးပါပြီ။")
+    except:
+        await message.reply("💡 Usage: <code>.gen [code] [amount]</code>")
