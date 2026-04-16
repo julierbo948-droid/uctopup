@@ -8,6 +8,7 @@ from handlers import (
     set_cookie_handler, 
     topup_handler, 
     add_admin_handler,
+    cookie_status_handler
 )
 
 # Logging ကို သတ်မှတ်ခြင်း
@@ -32,6 +33,8 @@ async def main():
     # ၄။ Voucher Code ဖြင့် ငွေဖြည့်သည့် Command (.topup)
     # Regex ကို သုံးပြီး register လုပ်တာ ပိုသေချာပါတယ်
     dp.message.register(topup_handler, F.text.regexp(r"(?i)^\.topup\s+[\w-]+"))
+
+    dp.message.register(cookie_status_handler, lambda m: m.text and m.text.lower() == ".ck")
 
     # ၅။ Admin အတွက် Voucher ထုတ်ပေးသည့် Command (.gen)
    # dp.message.register(gen_voucher_handler, lambda m: m.text and m.text.lower().startswith(".gen"))
