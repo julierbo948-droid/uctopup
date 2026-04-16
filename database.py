@@ -51,3 +51,15 @@ async def is_authorized(user_id: int):
     # DB ထဲမှာ Admin ရှိမရှိ စစ်တယ်
     admin = await admins_col.find_one({"user_id": user_id})
     return admin is not None
+
+# database.py ထဲတွင်
+async def add_balance(user_id: int, amount: float):
+    """User ၏ balance ကို တိုးပေးရန် (မရှိသေးလျှင် အသစ်ဆောက်ပေးမည်)"""
+    await users_col.update_one(
+        {"user_id": user_id},
+        {"$inc": {"balance": amount}},
+        upsert=True
+    )
+    # နောက်ဆုံး လက်ကျန်ငွေကို ပြန်ယူရန်
+    user = await users_col.find_one({"user_id": user_id})
+    return user['balance']
